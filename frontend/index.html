@@ -17,6 +17,18 @@
         .high { color: red; }
         .medium { color: orange; }
         .low { color: green; }
+        .high-bg {
+            background-color: #ffe6e6;
+            border: 1px solid red;
+        }
+        .medium-bg {
+            background-color: #fff4e5;
+            border: 1px solid orange;
+        }
+        .low-bg {
+            background-color: #e6ffed;
+            border: 1px solid green;
+        }
     </style>
 </head>
 
@@ -44,8 +56,21 @@
 
 <button onclick="checkRisk()">Check Safety</button>
 
-<h3 id="risk"></h3>
-<ul id="reasons"></ul>
+<div id="result" style="display:none; margin-top:20px; padding:15px; border-radius:8px;">
+    <h3 id="riskText"></h3>
+
+    <div style="background:#eee; border-radius:10px; overflow:hidden;">
+        <div id="riskBar" style="height:15px; width:0%;"></div>
+    </div>
+
+    <p><strong>Risk Score:</strong> <span id="riskScore"></span>/100</p>
+
+    <h4>Why this warning?</h4>
+    <ul id="reasons"></ul>
+
+    <h4>Recommended Action</h4>
+    <p id="advice"></p>
+</div>
 
 <script>
 async function checkRisk() {
@@ -56,24 +81,49 @@ async function checkRisk() {
             amount: Number(document.getElementById("amount").value),
             new_payee: Number(document.getElementById("payee").value),
             time_of_day: document.getElementById("time").value,
-            urgent: Number(document.getElementById("urgent").value)
+            urgent: Number(document.getElementById("urgent").value),
+            rapid_transactions: 1
         })
     });
 
     const data = await response.json();
 
-    const riskEl = document.getElementById("risk");
+    const resultBox = document.getElementById("result");
+    const riskText = document.getElementById("riskText");
+    const riskBar = document.getElementById("riskBar");
+    const riskScore = document.getElementById("riskScore");
     const reasonsEl = document.getElementById("reasons");
+    const adviceEl = document.getElementById("advice");
 
-    riskEl.innerText = "Risk Level: " + data.risk_level;
-    riskEl.className = data.risk_level.toLowerCase();
+    resultBox.style.display = "block";
+    resultBox.className = "";
+
+    riskText.innerText = "Risk Level: " + data.risk_level;
+    riskScore.innerText = data.risk_score;
+    riskBar.style.width = data.risk_score + "%";
 
     reasonsEl.innerHTML = "";
-    data.reasons.forEach(reason => {
+    data.reasons.forEach(r => {
         const li = document.createElement("li");
-        li.innerText = reason;
+        li.innerText = r;
         reasonsEl.appendChild(li);
     });
+
+    if (data.risk_level === "HIGH") {
+        resultBox.classList.add("high-bg");
+        riskBar.style.background = "red";
+        adviceEl.innerText = "Do NOT proceed. Verify the request directly with the sender.";
+    } 
+    else if (data.risk_level === "MEDIUM") {
+        resultBox.classList.add("medium-bg");
+        riskBar.style.background = "orange";
+        adviceEl.innerText = "Proceed only after double-checking the payment details.";
+    } 
+    else {
+        resultBox.classList.add("low-bg");
+        riskBar.style.background = "green";
+        adviceEl.innerText = "Safe to proceed. No major scam indicators detected.";
+    }
 }
 </script>
 

@@ -4,7 +4,8 @@ tx = {
     "amount": 25000,
     "new_payee": 1,
     "urgent": 1,
-    "time_of_day": "night"
+    "time_of_day": "night",
+    "rapid_transactions": 1
 }
 
 print(calculate_risk(tx))

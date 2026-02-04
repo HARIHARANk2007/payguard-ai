@@ -1,9 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from risk_engine import calculate_risk
 
-app = FastAPI()
+app = FastAPI(title="PAYGUARD AI")
 
 app.add_middleware(
     CORSMiddleware,
@@ -13,12 +13,16 @@ app.add_middleware(
 )
 
 class Transaction(BaseModel):
-    amount: float
+    amount: int
     new_payee: int
-    time_of_day: str
     urgent: int
+    time_of_day: str
+    rapid_transactions: int = 0  # optional
 
 @app.post("/check-transaction")
 def check_transaction(tx: Transaction):
-    risk_level, reasons = calculate_risk(tx.dict())
-    return {"risk_level": risk_level, "reasons": reasons}
+    if tx.amount <= 0:
+        raise HTTPException(status_code=400, detail="Amount must be greater than zero")
+
+    result = calculate_risk(tx.dict())
+    return result
