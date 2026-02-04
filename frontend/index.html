@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PAYGUARD AI</title>
+    <style>
+        body {
+            font-family: Arial;
+            max-width: 500px;
+            margin: auto;
+            padding-top: 40px;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        .high { color: red; }
+        .medium { color: orange; }
+        .low { color: green; }
+    </style>
+</head>
+
+<body>
+
+<h2>PAYGUARD AI</h2>
+<p>Check payment safety before approving</p>
+
+<input id="amount" type="number" placeholder="Enter Amount">
+
+<select id="payee">
+    <option value="0">Known Payee</option>
+    <option value="1">New Payee</option>
+</select>
+
+<select id="time">
+    <option value="day">Day</option>
+    <option value="night">Night</option>
+</select>
+
+<select id="urgent">
+    <option value="0">No Urgency</option>
+    <option value="1">Urgency / Pressure</option>
+</select>
+
+<button onclick="checkRisk()">Check Safety</button>
+
+<h3 id="risk"></h3>
+<ul id="reasons"></ul>
+
+<script>
+async function checkRisk() {
+    const response = await fetch("http://127.0.0.1:8000/check-transaction", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            amount: Number(document.getElementById("amount").value),
+            new_payee: Number(document.getElementById("payee").value),
+            time_of_day: document.getElementById("time").value,
+            urgent: Number(document.getElementById("urgent").value)
+        })
+    });
+
+    const data = await response.json();
+
+    const riskEl = document.getElementById("risk");
+    const reasonsEl = document.getElementById("reasons");
+
+    riskEl.innerText = "Risk Level: " + data.risk_level;
+    riskEl.className = data.risk_level.toLowerCase();
+
+    reasonsEl.innerHTML = "";
+    data.reasons.forEach(reason => {
+        const li = document.createElement("li");
+        li.innerText = reason;
+        reasonsEl.appendChild(li);
+    });
+}
+</script>
+
+</body>
+</html>
