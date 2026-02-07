@@ -14,10 +14,14 @@ app.add_middleware(
 
 class Transaction(BaseModel):
     amount: int
-    new_payee: int
-    urgent: int
-    time_of_day: str
-    rapid_transactions: int = 0  # optional
+    payee_type: str              # "known" or "new"
+    time_of_day: str             # "day" or "night"
+    urgency: int                 # 0 or 1
+    # Behavioral signals
+    input_time: int = 0          # seconds spent filling the form
+    pasted_upi: bool = False     # True if UPI was pasted
+    switch_count: int = 0        # number of tab switches
+    hesitation_score: int = 0    # number of backspaces
 
 @app.post("/check-transaction")
 def check_transaction(tx: Transaction):

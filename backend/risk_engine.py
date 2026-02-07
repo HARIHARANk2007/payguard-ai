@@ -8,10 +8,9 @@ def calculate_risk(tx: dict):
     reasons = []
 
     amount = tx.get("amount", 0)
-    new_payee = tx.get("new_payee", 0)
-    urgent = tx.get("urgent", 0)
+    payee_type = tx.get("payee_type", "known")
+    urgency = tx.get("urgency", 0)
     time_of_day = tx.get("time_of_day", "day")
-    rapid_tx = tx.get("rapid_transactions", 0)  # simulated signal
 
     # Rule 1: High transaction amount
     if amount >= 10000:
@@ -19,12 +18,12 @@ def calculate_risk(tx: dict):
         reasons.append("High transaction amount")
 
     # Rule 2: New / first-time payee
-    if new_payee == 1:
+    if payee_type == "new":
         score += 30
         reasons.append("Payment to a new payee")
 
     # Rule 3: Urgency or pressure
-    if urgent == 1:
+    if urgency == 1:
         score += 20
         reasons.append("Urgency or pressure detected")
 
@@ -33,10 +32,31 @@ def calculate_risk(tx: dict):
         score += 10
         reasons.append("Unusual transaction time")
 
-    # Rule 5: Multiple transactions in short time (simulated)
-    if rapid_tx == 1:
+    # ===== BEHAVIORAL ANALYSIS =====
+    input_time = tx.get("input_time", 0)
+    pasted_upi = tx.get("pasted_upi", False)
+    switch_count = tx.get("switch_count", 0)
+    hesitation_score = tx.get("hesitation_score", 0)
+
+    # Rule 5: Suspiciously fast input (bot-like behavior)
+    if input_time < 5 and input_time > 0:
+        score += 25
+        reasons.append("Suspiciously fast form completion (possible bot)")
+
+    # Rule 6: UPI ID was pasted (common in scam scenarios)
+    if pasted_upi:
         score += 15
-        reasons.append("Multiple transactions in a short time")
+        reasons.append("UPI ID was pasted (possibly from scam message)")
+
+    # Rule 7: Multiple tab switches (copying from external source)
+    if switch_count >= 3:
+        score += 10
+        reasons.append("Multiple tab switches detected")
+
+    # Rule 8: Excessive hesitation (uncertainty or coercion)
+    if hesitation_score >= 10:
+        score += 10
+        reasons.append("High hesitation detected (possible coercion)")
 
     # Cap score at 100
     risk_score = min(score, 100)

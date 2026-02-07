@@ -37,11 +37,12 @@
 <h2>PAYGUARD AI</h2>
 <p>Check payment safety before approving</p>
 
+<input id="upi" type="text" placeholder="Enter UPI ID (e.g., name@bank)">
 <input id="amount" type="number" placeholder="Enter Amount">
 
 <select id="payee">
-    <option value="0">Known Payee</option>
-    <option value="1">New Payee</option>
+    <option value="known">Known Payee</option>
+    <option value="new">New Payee</option>
 </select>
 
 <select id="time">
@@ -73,16 +74,52 @@
 </div>
 
 <script>
+// Behavioral tracking variables
+let startTime = Date.now();
+let pasted_upi = false;
+let switchCount = 0;
+let hesitation = 0;
+
+// Detect paste on UPI field
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("upi").addEventListener("paste", () => { pasted_upi = true; });
+});
+
+// Detect page switching (tab changes)
+document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) switchCount++;
+});
+
+// Detect hesitation (backspaces)
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Backspace") hesitation++;
+});
+
+// Calculate input time in seconds
+function getInputTime() {
+    return Math.round((Date.now() - startTime) / 1000);
+}
+
 async function checkRisk() {
+    const amount = Number(document.getElementById("amount").value);
+    const payeeType = document.getElementById("payee").value;
+    const timeOfDay = document.getElementById("time").value;
+    const urgency = Number(document.getElementById("urgent").value);
+
     const response = await fetch("http://127.0.0.1:8000/check-transaction", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            amount: Number(document.getElementById("amount").value),
-            new_payee: Number(document.getElementById("payee").value),
-            time_of_day: document.getElementById("time").value,
-            urgent: Number(document.getElementById("urgent").value),
-            rapid_transactions: 1
+            amount: amount,
+            payee_type: payeeType,
+            time_of_day: timeOfDay,
+            urgency: urgency,
+
+            // Behavioral signals
+            input_time: getInputTime(),
+            pasted_upi: pasted_upi,
+            switch_count: switchCount,
+            hesitation_score: hesitation
         })
     });
 
