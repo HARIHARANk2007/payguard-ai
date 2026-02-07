@@ -9,7 +9,7 @@ def calculate_risk(tx: dict):
 
     amount = tx.get("amount", 0)
     payee_type = tx.get("payee_type", "known")
-    urgency = tx.get("urgency", 0)
+    urgency = tx.get("urgency", "no")
     time_of_day = tx.get("time_of_day", "day")
 
     # Rule 1: High transaction amount
@@ -23,7 +23,7 @@ def calculate_risk(tx: dict):
         reasons.append("Payment to a new payee")
 
     # Rule 3: Urgency or pressure
-    if urgency == 1:
+    if urgency == "yes":
         score += 20
         reasons.append("Urgency or pressure detected")
 
@@ -32,31 +32,31 @@ def calculate_risk(tx: dict):
         score += 10
         reasons.append("Unusual transaction time")
 
-    # ===== BEHAVIORAL ANALYSIS =====
+    # ===== BEHAVIORAL BIOMETRICS RULES =====
     input_time = tx.get("input_time", 0)
     pasted_upi = tx.get("pasted_upi", False)
     switch_count = tx.get("switch_count", 0)
     hesitation_score = tx.get("hesitation_score", 0)
 
-    # Rule 5: Suspiciously fast input (bot-like behavior)
-    if input_time < 5 and input_time > 0:
-        score += 25
-        reasons.append("Suspiciously fast form completion (possible bot)")
-
-    # Rule 6: UPI ID was pasted (common in scam scenarios)
+    # Rule 5: UPI ID was pasted (common scam pattern)
     if pasted_upi:
+        score += 25
+        reasons.append("UPI ID was pasted — common scam pattern")
+
+    # Rule 6: Fast confirmation (less than 3 seconds)
+    if input_time < 3 and input_time > 0:
         score += 15
-        reasons.append("UPI ID was pasted (possibly from scam message)")
+        reasons.append("Fast confirmation suggests urgency or pressure")
 
-    # Rule 7: Multiple tab switches (copying from external source)
-    if switch_count >= 3:
-        score += 10
-        reasons.append("Multiple tab switches detected")
+    # Rule 7: Multiple app/tab switches (suspicious behavior)
+    if switch_count > 2:
+        score += 15
+        reasons.append("User switched apps multiple times — suspicious behavior")
 
-    # Rule 8: Excessive hesitation (uncertainty or coercion)
-    if hesitation_score >= 10:
+    # Rule 8: Hesitation detected during input
+    if hesitation_score > 5:
         score += 10
-        reasons.append("High hesitation detected (possible coercion)")
+        reasons.append("Hesitation detected during input")
 
     # Cap score at 100
     risk_score = min(score, 100)

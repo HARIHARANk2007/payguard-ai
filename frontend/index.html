@@ -51,8 +51,8 @@
 </select>
 
 <select id="urgent">
-    <option value="0">No Urgency</option>
-    <option value="1">Urgency / Pressure</option>
+    <option value="no">No Urgency</option>
+    <option value="yes">Urgency / Pressure</option>
 </select>
 
 <button onclick="checkRisk()">Check Safety</button>
@@ -104,7 +104,7 @@ async function checkRisk() {
     const amount = Number(document.getElementById("amount").value);
     const payeeType = document.getElementById("payee").value;
     const timeOfDay = document.getElementById("time").value;
-    const urgency = Number(document.getElementById("urgent").value);
+    const urgency = document.getElementById("urgent").value;
 
     const response = await fetch("http://127.0.0.1:8000/check-transaction", {
         method: "POST",
